@@ -2,6 +2,9 @@ package com.example.escaperoom.controller;
 
 import com.example.escaperoom.model.EscapeSession;
 import com.example.escaperoom.repository.EscapeSessionRepo;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,35 +14,28 @@ import java.util.List;
 public class EscapeSessionController {
     private final EscapeSessionRepo escapeSessionRepo;
 
-    public EscapeSessionController(EscapeSessionRepo escapeSessionRepo){
+    public EscapeSessionController(EscapeSessionRepo escapeSessionRepo) {
         this.escapeSessionRepo = escapeSessionRepo;
     }
 
-    @GetMapping("/json")
-    public List<EscapeSession> getEscapeSessionsJson() {
-        return escapeSessions;
+    @GetMapping
+    public ResponseEntity<List<EscapeSession>> getAllSessions() {
+        List<EscapeSession> sessions = escapeSessionRepo.findAll();
+        return ResponseEntity.ok(sessions);
     }
 
-    @GetMapping("/html")
-    public String getEscapeSessionsHtml() {
-        String escapeSessionList = "<ul>";
-        for (EscapeSession escapeSession : escapeSessions) {
-                escapeSessionList += "<li>" + escapeSession.getName() +
-                        " by " + escapeSession.getArtist() + "</li>";
-        }
-        escapeSessionList += "</ul>";
+    @PostMapping
+    public ResponseEntity<EscapeSession> addSession(@Valid @RequestBody EscapeSession session){
+        EscapeSession savedSession = escapeSessionRepo.save(session);
 
-        return """
-                    <html>
-                    <body>
-                        <h1>EscapeSessions</h1>
-                        <ul>
-                """ +
-                    escapeSessionList +
-                    """
-                            </ul>
-                        </body>
-                    """;
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(savedSession);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSession(@PathVariable int id){
+        escapeSessionRepo.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
-
